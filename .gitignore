@@ -3,3 +3,5 @@
 node_modules/
 
 .jshintrc
+
+cloud_sql_proxy.exe

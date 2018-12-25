@@ -1,0 +1,51 @@
+tables
+
+members
+- unique id (int primary key)
+- first name (string)
+- last name (string)
+- year (number)
+- email (string)
+- newsletter (boolean)
+
+events
+- unique id (int primary key)
+- name (string)
+- date (date)
+- semester (number)
+- attendance (number)
+
+member-event
+- member id
+- event id
+
+academic year mapping
+- year name (string)
+- year value (number)
+
+semester mapping
+- semester name (string)
+	- include a semester called "current semester"
+- semester value (number)
+
+
+views
+
+members
+- first name
+- last name
+- attendance this semester (number)
+- attendance total (number)
+- active member (boolean)
+	- based on events attendance
+
+latest semester events
+- name
+- date
+- attendance
+
+semester overview
+- semester (string)
+- number of events (number)
+- average attendance (number)
+- number of active members (number)
