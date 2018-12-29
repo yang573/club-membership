@@ -55,28 +55,60 @@ router.post('/event/upload', function(req, res) {
 
 // Get overall event info for the most recent semester
 router.get('/event', function(req, res) {
-  // TODO
+  let sqlString; // TODO: select row where max from semesterid
+  let overallData;
+  promiseQuery(sqlString).then(function(result) {
+    overallData = {
+      Semester: result[0].Value,
+      Number_Of_Events: null,
+      Average_Attendance: null
+    };
+
+    sqlString = 'SELECT * FROM Events WHERE SemesterID = ?';
+    return promiseQuery(sqlString, result[0].SemesterID);
+  }).then(function(results) {
+    let average = 0;
+    for (let row in results) {
+      average += row.Attendance;
+    }
+    average /= results[0].length;
+
+    overallData.Number_Of_Events = results.length;
+    overallData.Average_Attendance = average;
+
+    res.send(packageData(overallData));
+  }).catch(function(error) {
+    res.send(parseError(error));
+  });
 });
 
 // Get information about a specific event
 router.get('/event/:eventID', function(req, res) {
-  // let sqlString = 'SELECT * FROM Events WHERE EventID = ? LIMIT 1';
-  // connection.query(sqlString, [req.query.eventID], function(error, results, fields) {
-  //   if (error)
-  //     res.send(parseError(error));
-  //   else {
-  //     // TODO: Get semester name from id
-  //     let eventData = {
-  //       EventID: results[0].EventID,
-  //       Name: results[0].Name,
-  //       Date: results[0].Date,
-  //       SemesterID: results[0].SemesterID,
-  //       Attendance: results[0].Attendance
-  //     };
-  //
-  //     res.send(packageData(eventData));
-  //   }
-  // });
+  let sqlString = 'SELECT * FROM Events WHERE EventID = ? LIMIT 1';
+  let eventData;
+  promiseQuery(sqlString, req.params.eventID).then(function(result) {
+    if (result.length == 0) {
+      let error = new Error('The EventID '+ req.params.eventID +' could not be found.');
+      error.code = 400;
+      return Promise.reject(error);
+    }
+
+    eventData = {
+      EventID: result[0].EventID,
+      Name: result[0].Name,
+      Date: result[0].Date,
+      Semester: null,
+      Attendance: result[0].Attendance
+    };
+
+    sqlString = 'SELECT * FROM Semester AS Value WHERE SemesterID = ? LIMIT 1';
+    return promiseQuery(sqlString, result[0].SemesterID);
+  }).then(function(result) {
+    eventData.Semester = result[0].Value;
+    res.send(packageData(eventData));
+  }).catch(function(error) {
+    res.send(parseError(error));
+  });
 });
 
 // Get overall membership information
@@ -89,7 +121,7 @@ router.get('/member/:memberID', function(req, res) {
   // TODO: Get attendance and active member status
 
   let sqlString = 'SELECT * FROM Members WHERE MemberID = ? LIMIT 1';
-  let eventData;
+  let memberData;
   promiseQuery(sqlString, req.params.memberID).then(function(result) {
     if (result.length == 0) {
       let error = new Error('The MemberID '+ req.params.memberID +' could not be found.');
@@ -97,7 +129,7 @@ router.get('/member/:memberID', function(req, res) {
       return Promise.reject(error);
     }
 
-    eventData = {
+    memberData = {
       MemberID: result[0].MemberID,
       FirstName: result[0].FirstName,
       LastName: result[0].LastName,
@@ -106,12 +138,12 @@ router.get('/member/:memberID', function(req, res) {
       Newsletter: Boolean(result[0].Newsletter)
     };
 
-    sqlString = 'SELECT * FROM Academic_Year AS YearID WHERE YearID = ? LIMIT 1';
+    sqlString = 'SELECT * FROM Academic_Year AS Value WHERE YearID = ? LIMIT 1';
     return promiseQuery(sqlString, result[0].YearID);
   }).then(function(result) {
     console.log(result);
-    eventData.Year = result[0].Value;
-    res.send(packageData(eventData));
+    memberData.Year = result[0].Value;
+    res.send(packageData(memberData));
   }).catch(function(error) {
     res.send(parseError(error));
   });
