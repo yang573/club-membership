@@ -9,3 +9,6 @@ VALUES
 
 INSERT INTO Members (FirstName, LastName, YearID, Email, Newsletter)
 VALUES ('John', 'Moe', 3, 'john.moe@notreal.edu', false);
+
+INSERT INTO Promos (PromoLink,CompanyID,ExpireDate,QuanityAvailable)
+VALUES ('https://sbcs.io',4,'2019-01-01 00:00:01', 100);
