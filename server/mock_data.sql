@@ -8,7 +8,20 @@ VALUES
     ('John', 'Doe', 4, 'john.doe@notreal.edu', false);
 
 INSERT INTO Members (FirstName, LastName, YearID, Email, Newsletter)
-VALUES ('John', 'Moe', 3, 'john.moe@notreal.edu', false);
+VALUES ('Jim', 'Moe', 3, 'john.moe@notreal.edu', false);
+
+INSERT INTO Events (Name, Date, SemesterID, Attendance)
+VALUES
+	('Event One', '2018-01-01', 1, 3),
+    ('Event Two', '2018-09-01', 2, 2);
+
+INSERT INTO Member_Event
+VALUES
+	(1, 1),
+    (2, 1),
+    (4, 1),
+    (2, 2),
+    (3, 2);
 
 INSERT INTO Promos (PromoLink,CompanyID,ExpireDate,QuanityAvailable)
 VALUES ('https://sbcs.io',4,'2019-01-01 00:00:01', 100);
