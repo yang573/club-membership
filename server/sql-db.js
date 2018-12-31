@@ -19,8 +19,11 @@ const connection = mysql.createConnection({
   database: 'dev_sbcs'
 });
 
+
+/** Events **/
+
 // Add an event spreadsheet to the database
-router.post('/event/upload', function(req, res) {
+router.post('/event', function(req, res) {
   // // Get data from Google Drive
   // // req.body.PARAM == sheet name/path
   // let eventData = ['Hi', new Date(2018, 8, 30), 100];
@@ -54,10 +57,17 @@ router.post('/event/upload', function(req, res) {
 });
 
 // Get overall event info for the most recent semester
-router.get('/event', function(req, res) {
-  let sqlString; // TODO: select row where max from semesterid
+router.get('/event/overall', function(req, res) {
+  // select row with max SemesterID
+  let sqlString = 'SELECT * FROM Semester ORDER BY SemesterID DESC LIMIT 1';
   let overallData;
   promiseQuery(sqlString).then(function(result) {
+    if (result.length == 0) {
+      let error = new Error('No events could not be found.');
+      error.code = 404;
+      return Promise.reject(error);
+    }
+
     overallData = {
       Semester: result[0].Value,
       Number_Of_Events: null,
@@ -89,7 +99,7 @@ router.get('/event/:eventID', function(req, res) {
   promiseQuery(sqlString, req.params.eventID).then(function(result) {
     if (result.length == 0) {
       let error = new Error('The EventID '+ req.params.eventID +' could not be found.');
-      error.code = 400;
+      error.code = 404;
       return Promise.reject(error);
     }
 
@@ -111,8 +121,61 @@ router.get('/event/:eventID', function(req, res) {
   });
 });
 
+// Delete an event from the database
+router.delete('/event/:eventID', function(req, res) {
+  let sqlString = 'SELECT 1 FROM Events WHERE EventID = ?';
+  promiseQuery(sqlString, req.params.eventID).then(function(result) {
+    if (result.length == 0) {
+      let error = new Error('The EventID '+ req.params.eventID +' could not be found.');
+      error.code = 404;
+      return Promise.reject(error);
+    }
+
+    sqlString = 'DELETE FROM Member_Event WHERE EventID = ?';
+    return promiseQuery(sqlString, req.query.eventID);
+  }).then(function(result) {
+    sqlString = 'DELETE FROM Events WHERE EventID = ?';
+    return promiseQuery(sqlString, req.query.eventID);
+  }).then(function(result) {
+    console.log(result);
+
+    let message = {
+      message: 'Deletion successful',
+      eventID: req.params.eventID
+    };
+
+    res.send(packageData(message));
+  }).catch(function(error) {
+    res.send(parseError(error));
+  });
+});
+
+
+/** Members **/
+
+// Insert a new member
+router.post('/member', function(req, res) {
+  let sqlString = `INSERT INTO Members (FirstName, LastName, YearID, Email, Newsletter)
+                      VALUES (?, ?, ?, ?, ?)`;
+  let memberData = [
+    req.body.firstName, req.body.lastName,
+    req.body.yearID, req.body.email, req.body.newsletter
+  ];
+
+  promiseQuery(sqlString, memberData, function(result) {
+    let insertData = {
+      memberID: result.insertID,
+      url: `/member/${result.insertID}`
+    };
+
+    res.send(packageData(insertData));
+  }).catch(function(error) {
+    res.send(parseError(error));
+  });
+});
+
 // Get overall membership information
-router.get('/member', function(req, res) {
+router.get('/member/overall', function(req, res) {
   // TODO
 });
 
@@ -125,7 +188,7 @@ router.get('/member/:memberID', function(req, res) {
   promiseQuery(sqlString, req.params.memberID).then(function(result) {
     if (result.length == 0) {
       let error = new Error('The MemberID '+ req.params.memberID +' could not be found.');
-      error.code = 400;
+      error.code = 404;
       return Promise.reject(error);
     }
 
@@ -148,6 +211,34 @@ router.get('/member/:memberID', function(req, res) {
     res.send(parseError(error));
   });
 });
+
+router.delete('/member/:memberID', function(req, res) {
+  let sqlString = 'SELECT 1 FROM Members WHERE MemberID = ?';
+  promiseQuery(sqlString, req.params.memberID).then(function(result) {
+    if (result.length == 0) {
+      let error = new Error('The MemberID '+ req.params.memberID +' could not be found.');
+      error.code = 404;
+      return Promise.reject(error);
+    }
+
+    sqlString = 'DELETE FROM Members WHERE MemberID = ?';
+    return promiseQuery(sqlString, req.query.memberID);
+  }).then(function(result) {
+    console.log(result);
+
+    let message = {
+      message: 'Deletion successful',
+      eventID: req.params.memberID
+    };
+
+    res.send(packageData(message));
+  }).catch(function(error) {
+    res.send(parseError(error));
+  });
+});
+
+
+/** Other **/
 
 // Get newsletter sign-up information
 router.get('/newsletter', function(req, res) {
@@ -178,6 +269,7 @@ router.get('/semester/:semester', function(req, res) {
 });
 
 module.exports = router;
+
 
 /* Helper Functions */
 function promiseQuery(query) {
