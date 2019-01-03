@@ -7,14 +7,14 @@ CREATE TABLE IF NOT EXISTS Academic_Year (
 
 INSERT INTO Academic_Year
 VALUES
-	(0, 'Freshman'),
-	(1, 'Sophomore'),
-    (2, 'Junior'),
-    (3, 'Senior'),
-    (4, 'Graduate Student'),
-    (5, 'Professor'),
-    (6, 'Other'),
-    (7, 'Company Rep');
+	(1, 'Freshman'),
+	(2, 'Sophomore'),
+    (3, 'Junior'),
+    (4, 'Senior'),
+    (5, 'Graduate Student'),
+    (6, 'Professor'),
+    (7, 'Other'),
+    (8, 'Company Rep');
 
 CREATE TABLE IF NOT EXISTS Semester (
 	SemesterID int PRIMARY KEY AUTO_INCREMENT,

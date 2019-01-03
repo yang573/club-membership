@@ -3,7 +3,7 @@ const http = require('http');
 const express = require('express');
 
 // Setup
-const db = require('./server/sql-db.js');
+const db = require('./server/database/index.js');
 const facebook = require('./server/facebook-api.js');
 const linkedin = require('./server/linkedin-api.js');
 const app = express();
@@ -20,9 +20,15 @@ app.use('/database', db);
 app.use('/facebook', facebook);
 app.use('/linkedin', linkedin);
 
+app.get('/', function(req,res) {
+  res.send('Hello World!!!');
+});
+
 // Catch-all for returning help info
 app.get('*', function(req, res) {
   // TODO
+  console.log('Catch-all');
+  res.send('Catch-all');
 });
 
 app.set('port', port);

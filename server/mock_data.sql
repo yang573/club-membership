@@ -15,6 +15,10 @@ VALUES
 	('Event One', '2018-01-01', 1, 3),
     ('Event Two', '2018-09-01', 2, 2);
 
+INSERT INTO Events (Name, Date, SemesterID, Attendance)
+VALUES
+	('Event Tree', '2018-12-01', 2, 0);
+
 INSERT INTO Member_Event
 VALUES
 	(1, 1),

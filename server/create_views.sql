@@ -8,9 +8,11 @@ CREATE VIEW Membership AS SELECT
 		END AS Active
 FROM(
 SELECT
+	Members.MemberID,
 	Members.FirstName,
 	Members.LastName,
-    (SELECT COUNT(*) FROM Events WHERE
+	Members.YearID,
+	(SELECT COUNT(*) FROM Events WHERE
 		SemesterID = (SELECT SemesterID FROM Semester ORDER BY SemesterID DESC LIMIT 1) AND
 		EventID IN (SELECT EventID FROM Member_Event WHERE Member_Event.MemberID = Members.MemberID))
 		AS Semester_Attendance,

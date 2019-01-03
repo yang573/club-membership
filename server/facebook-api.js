@@ -15,6 +15,7 @@ router.post('/alumni', function(req, res) {
 module.exports = router;
 
 // TODO: Move helper functions to a shared file
+// TODO: Find best way to connect to mysql between files.
 /* Helper Functions */
 function promiseQuery(query) {
   return new Promise(function(resolve, reject) {
