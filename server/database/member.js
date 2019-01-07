@@ -35,13 +35,13 @@ router.post('/', function(req, res) {
 });
 
 // Get overall membership information
-// TODO: Get list of memberID
+// TODO: Paginate list of memberID
 router.get('/', function(req, res) {
   let memberData;
   let promiseArray = [
     connection.promiseQuery('SELECT COUNT(*) AS count FROM Members'),
     connection.promiseQuery(`SELECT ROUND(AVG(Semester_Attendance), 2) AS semester_average,
-      ROUND(AVG(Total_Attendance), 2) AS total_average,
+      ROUND(AVG(Total_Attendance), 2) AS total_average
       FROM Membership`),
     connection.promiseQuery('SELECT Active, COUNT(*) AS count FROM Membership GROUP BY Active'),
   ];
@@ -49,7 +49,14 @@ router.get('/', function(req, res) {
   Promise.all(promiseArray).then(function(results) {
     console.log(results);
 
-    memberData =
+    memberData = {
+      overall: {
+        total_members: results[0][0].count,
+        average_semester_attendance: results[1][0].semester_average,
+        total_semester_attendance: results[1][0].total_average,
+        active_members: results[2][0].count
+      }
+    };
 
     promiseArray = [
       connection.promiseQuery('SELECT YearID, COUNT(*) AS count FROM Members GROUP BY YearID'),
@@ -63,6 +70,27 @@ router.get('/', function(req, res) {
     return Promise.all(promiseArray);
   }).then(function(results) {
     console.log(results);
+
+    memberData.year_breakdown = {
+      total_members: yearBreakdown(results[0], 'count'),
+      average_semester_attendance: yearBreakdown(results[1], 'semester_average'),
+      total_semester_attendance: yearBreakdown(results[1], 'total_average'),
+      active_members: yearBreakdown(results[2], 'count')
+    };
+
+    return connection.promiseQuery('SELECT MemberID, FirstName, LastName FROM Members');
+  }).then(function(results) {
+    console.log(results);
+
+    let members = {};
+    for (let row of results) {
+      let key = row.FirstName + '_' + row.LastName;
+      members[key] = `/database/member/${row.MemberID}`;
+    }
+
+    memberData.members = members;
+
+    res.send(packageData(memberData));
   }).catch(function(error) {
     res.send(parseError(error));
   });
@@ -174,6 +202,26 @@ router.delete('/:memberID', function(req, res) {
 });
 
 module.exports = router;
+
+function yearBreakdown(rawData, key) {
+	let yearData = Array(8);
+	let i = 0;
+
+	for (let j = 0; i < rawData.length; j++) {
+      yearData[j] = rawData[i].YearID == j + 1 ? rawData[i++][key] : 0;
+    }
+
+	return {
+		freshmen: yearData[0],
+		sophomore: yearData[1],
+		junior: yearData[2],
+		senior: yearData[3],
+		graduate_student: yearData[4],
+		professor: yearData[5],
+		other: yearData[6],
+		company_rep: yearData[7]
+	};
+}
 
 function packageData(data) {
   return JSON.stringify({ status: 200, data: data });
