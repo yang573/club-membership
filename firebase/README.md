@@ -1,6 +1,6 @@
 # Firebase Stuff Steps
 1. Make sure node.js and firebase-cli are installed.
-   -Once node is installed,install firebase using ```npm install -g firebase tools``` (installs globally)
+   - Once node is installed, install firebase using ```npm install -g firebase tools``` (installs globally)
 2. Login to firebase using firebase login
    -This will give you a link to authenticate with. Use shared email.
 3. Select the project for use using this command ```firebase use active-members-sbcs```
