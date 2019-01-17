@@ -2,6 +2,7 @@
 logs
 *.log
 npm-debug.log*
+functions/privatekey.json
 yarn-debug.log*
 yarn-error.log*
 firebase-debug.log*
