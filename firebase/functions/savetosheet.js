@@ -15,7 +15,7 @@
 //          return;
 //  } else {
 //                           console.log("Successfully connected!");
-//                         var parentID = "1lCoITNE0eyrRNxKtVhpHe7bq-P0FUp0e";
+//                         var parentID = "NAH";
 //                         loadFiles(jwtClient, parentID);
 //                                        }
 //                                                   });
@@ -23,7 +23,7 @@
 //
 // function getSheetData(auth,sheetID){
 // const sheets = google.sheets({version: 'v4', auth});
-// //var spreadsheetId = "1sSDRdukNm1UskZ9ivkuJ2hvsX-HhHLEfxO8rszuoqz8";
+// //var spreadsheetId = "NAH";
 // var request = {
 //         valueRenderOption: 'FORMATTED_VALUE',
 //         spreadsheetId:sheetID,

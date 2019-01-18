@@ -11,6 +11,7 @@ let jwtClient = new google.auth.JWT(
     'https://www.googleapis.com/auth/drive',
     'https://www.googleapis.com/auth/calendar'
   ]);
+authenticate(jwtClient);
 
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
@@ -21,16 +22,7 @@ let jwtClient = new google.auth.JWT(
 
 //email should be identifier.
 exports.pullMemberData = functions.https.onCall((data, context) => {
-    jwtClient.authorize(function(err, tokens) {
-      if (err) {
-        console.log(err);
-        return;
-      } else {
-        console.log("Successfully connected to sheets");
-        var parentID = "1lCoITNE0eyrRNxKtVhpHe7bq-P0FUp0e";
-        loadFiles(jwtClient, parentID);
-      }
-    });
+    authenticate(client);
 });
 
 //List of needed Functions for stats
@@ -39,6 +31,20 @@ exports.pullMemberData = functions.https.onCall((data, context) => {
 // 3) Get statistics data on any person (list of events attended, active status)
 
 //drive api stuff
+
+function authenticate(client) {
+  jwtClient.authorize(function(err, tokens) {
+    if (err) {
+      console.log(err);
+      return;
+    } else {
+      console.log("Successfully connected to sheets");
+      var parentID = "1lCoITNE0eyrRNxKtVhpHe7bq-P0FUp0e";
+      loadFiles(jwtClient, parentID);
+    }
+  });
+}
+
 function getSheetData(auth,sheetID){
 const sheets = google.sheets({version: 'v4', auth});
 //var spreadsheetId = "1sSDRdukNm1UskZ9ivkuJ2hvsX-HhHLEfxO8rszuoqz8";
