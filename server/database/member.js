@@ -208,8 +208,8 @@ function yearBreakdown(rawData, key) {
 	let i = 0;
 
 	for (let j = 0; i < rawData.length; j++) {
-      yearData[j] = rawData[i].YearID == j + 1 ? rawData[i++][key] : 0;
-    }
+    yearData[j] = rawData[i].YearID == j + 1 ? rawData[i++][key] : 0;
+  }
 
 	return {
 		freshmen: yearData[0],

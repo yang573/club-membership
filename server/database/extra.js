@@ -25,8 +25,9 @@ router.get('/newsletter', function(req, res) {
 });
 
 // Get an overall recap of a semester
+// TODO
 router.get('/semester/:semester', function(req, res) {
-  // TODO
+
 });
 
 module.exports = router;
