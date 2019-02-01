@@ -83,10 +83,10 @@ router.get('/', function(req, res) {
     console.log(results);
 
     let members = {};
-    for (let row of results) {
+    results.forEach(row => {
       let key = row.FirstName + '_' + row.LastName;
       members[key] = `/database/member/${row.MemberID}`;
-    }
+    });
 
     memberData.members = members;
 
@@ -218,8 +218,8 @@ function yearBreakdown(rawData, key) {
 		senior: yearData[3],
 		graduate_student: yearData[4],
 		professor: yearData[5],
-		other: yearData[6],
-		company_rep: yearData[7]
+    company_rep: yearData[6],
+		other: yearData[7],
 	};
 }
 

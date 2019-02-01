@@ -8,8 +8,8 @@ router.get('/newsletter', function(req, res) {
 
   // Setup database calls
   let promiseArray = [
-    conn.promiseQuery('SELECT COUNT(Newsletter) as count FROM Members WHERE Newsletter=1'),
-    conn.promiseQuery('SELECT COUNT(*) as count FROM Members')
+    conn.promiseQuery('SELECT COUNT(Newsletter) as count FROM members WHERE Newsletter=1'),
+    conn.promiseQuery('SELECT COUNT(*) as count FROM members')
   ];
 
   // Resolve database calls and return
