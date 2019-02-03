@@ -3,6 +3,4 @@
 node_modules/
 upload/
 
-.jshintrc
-
 cloud_sql_proxy.exe

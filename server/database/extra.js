@@ -3,7 +3,7 @@ const router = express.Router();
 const conn = require('./connection.js');
 
 // Get newsletter sign-up information
-router.get('/newsletter', function(req, res) {
+router.get('/newsletter', (req, res) => {
   console.log('Newsletter request received');
 
   // Setup database calls
@@ -13,14 +13,14 @@ router.get('/newsletter', function(req, res) {
   ];
 
   // Resolve database calls and return
-  Promise.all(promiseArray).then(function(results) {
+  Promise.all(promiseArray).then(results => {
     let data = {
       'signed-up': results[0][0].count,
       'total-members': results[1][0].count
     };
-    res.send(packageData(data));
-  }).catch(function(error) {
-    res.send(parseError(error));
+    return res.send(connection.packageData(data));
+  }).catch(error => {
+    return res.send(connection.parseError(error));
   });
 });
 
@@ -31,12 +31,3 @@ router.get('/semester/:semester', function(req, res) {
 });
 
 module.exports = router;
-
-function packageData(data) {
-  return JSON.stringify({ status: 200, data: data });
-}
-
-function parseError(error) {
-  console.log(error);
-  return JSON.stringify({ status: error.code, message: error.message });
-}
