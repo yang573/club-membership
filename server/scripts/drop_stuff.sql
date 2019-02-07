@@ -1,0 +1,11 @@
+DROP VIEW IF EXISTS membership;
+DROP VIEW IF EXISTS recent_events;
+DROP VIEW IF EXISTS semester_overview;
+
+DROP TABLE IF EXISTS promos;
+DROP TABLE IF EXISTS member_login;
+DROP TABLE IF EXISTS member_event;
+DROP TABLE IF EXISTS members;
+DROP TABLE IF EXISTS events;
+DROP TABLE IF EXISTS academic_year;
+DROP TABLE IF EXISTS semester;

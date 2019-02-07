@@ -8,6 +8,6 @@ const extra = require('./extra.js');
 
 router.use('/event', event);
 router.use('/member', member);
-router.use('/extra', extra);
+router.use('/', extra);
 
 module.exports = router;

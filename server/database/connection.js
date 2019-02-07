@@ -8,7 +8,7 @@ const connection = mysql.createConnection({
   database: 'dev_sbcs'
 });
 
-connection.connect(function(error) {
+connection.connect(error => {
   if (error) {
     throw error;
   }
@@ -16,18 +16,27 @@ connection.connect(function(error) {
 
 console.log('connection');
 
-function promiseQuery(query, values = null) {
-  return new Promise(function(resolve, reject) {
-    connection.query(query, values, function(error, results) {
-      if (error != null)
-        reject(error);
-      else
-        resolve(results);
-    });
+async function promiseQuery(query, values = null) {
+  connection.query(query, values, (error, results) => {
+    if (error !== null)
+      return Promise.reject(error);
+    else
+      return Promise.resolve(results);
   });
+}
+
+function packageData(data) {
+  return JSON.stringify({ status: 200, data: data });
+}
+
+function parseError(error) {
+  console.log(error);
+  return JSON.stringify({ status: error.code, message: error.message });
 }
 
 module.exports = {
   connection: connection,
-  promiseQuery: promiseQuery
+  promiseQuery: promiseQuery,
+  packageData: packageData,
+  parseError: parseError
 };

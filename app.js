@@ -31,13 +31,13 @@ app.use(express.urlencoded({ extended: false }));
 // app.use('/facebook', facebook);
 // app.use('/linkedin', linkedin);
 
-app.get('/', function(req,res) {
+app.get('/', (req,res) => {
   res.send('Hello World!!!');
 });
 
 
 // Catch-all for returning help info
-app.get('*', function(req, res) {
+app.get('*', (req, res) => {
   // TODO
   console.log('Catch-all');
   res.send('Catch-all');

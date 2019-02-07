@@ -3,12 +3,12 @@ const router = express.Router();
 const connection = require('./connection');
 
 // Insert a new member
-router.post('/', function(req, res) {
+router.post('/', (req, res) => {
   connection.promiseQuery(
     'SELECT 1 FROM Members WHERE Email = ?',
     req.body.email
-  ).then(function(result) {
-    if (result.length != 0) {
+  ).then(result => {
+    if (result.length !== 0) {
       let error = new Error('A member already exists with the email '+ req.body.email);
       error.code = 404;
       return Promise.reject(error);
@@ -22,21 +22,21 @@ router.post('/', function(req, res) {
     ];
 
     return connection.promiseQuery(sqlString, memberData);
-  }).then(function(result) {
+  }).then(result => {
     let insertData = {
       memberID: result.insertID,
       url: `/member/${result.insertID}`
     };
 
-    res.send(packageData(insertData));
-  }).catch(function(error) {
+    return res.send(packageData(insertData));
+  }).catch(error => {
     res.send(parseError(error));
   });
 });
 
 // Get overall membership information
 // TODO: Paginate list of memberID
-router.get('/', function(req, res) {
+router.get('/', (req, res) => {
   let memberData;
   let promiseArray = [
     connection.promiseQuery('SELECT COUNT(*) AS count FROM Members'),
@@ -46,7 +46,7 @@ router.get('/', function(req, res) {
     connection.promiseQuery('SELECT Active, COUNT(*) AS count FROM Membership GROUP BY Active'),
   ];
 
-  Promise.all(promiseArray).then(function(results) {
+  Promise.all(promiseArray).then(results => {
     console.log(results);
 
     memberData = {
@@ -68,7 +68,7 @@ router.get('/', function(req, res) {
         FROM Membership GROUP BY YearID, Active`),
     ];
     return Promise.all(promiseArray);
-  }).then(function(results) {
+  }).then(results => {
     console.log(results);
 
     memberData.year_breakdown = {
@@ -79,33 +79,33 @@ router.get('/', function(req, res) {
     };
 
     return connection.promiseQuery('SELECT MemberID, FirstName, LastName FROM Members');
-  }).then(function(results) {
+  }).then(results => {
     console.log(results);
 
     let members = {};
-    for (let row of results) {
+    results.forEach(row => {
       let key = row.FirstName + '_' + row.LastName;
       members[key] = `/database/member/${row.MemberID}`;
-    }
+    });
 
     memberData.members = members;
 
-    res.send(packageData(memberData));
-  }).catch(function(error) {
-    res.send(parseError(error));
+    return res.send(connection.packageData(memberData));
+  }).catch(error => {
+    return res.send(connection.parseError(error));
   });
 });
 
 // Get information about a specific member
-router.get('/:memberID', function(req, res) {
+router.get('/:memberID', (req, res) => {
   let memberData;
   let promiseArray = [
     connection.promiseQuery('SELECT * FROM Members WHERE MemberID = ? LIMIT 1', req.params.memberID),
     connection.promiseQuery('SELECT * FROM Membership WHERE MemberID = ? LIMIT 1', req.params.memberID)
   ];
 
-  Promise.all(promiseArray).then(function(results) {
-    if (results[0].length == 0) {
+  Promise.all(promiseArray).then(results => {
+    if (results[0].length === 0) {
       let error = new Error('The MemberID '+ req.params.memberID +' could not be found.');
       error.code = 404;
       return Promise.reject(error);
@@ -127,23 +127,23 @@ router.get('/:memberID', function(req, res) {
       'SELECT * FROM Academic_Year AS Value WHERE YearID = ? LIMIT 1',
       results[0][0].YearID
     );
-  }).then(function(result) {
+  }).then(result => {
     console.log(result);
     memberData.Year = result[0].Value;
-    res.send(packageData(memberData));
-  }).catch(function(error) {
-    res.send(parseError(error));
+    return res.send(connection.packageData(memberData));
+  }).catch(error => {
+    return res.send(connection.parseError(error));
   });
 });
 
 // Modify a specified member
-router.patch('/:memberID', function(req, res) {
+router.patch('/:memberID', (req, res) => {
   let values = req.body.values; // JSON
   connection.promiseQuery(
     'SELECT 1 FROM Members WHERE MemberID = ?',
     req.params.memberID
-  ).then(function(result) {
-    if (result.length == 0) {
+  ).then(result => {
+    if (result.length === 0) {
       let error = new Error('The MemberID '+ req.params.memberID +' could not be found.');
       error.code = 404;
       return Promise.reject(error);
@@ -154,26 +154,26 @@ router.patch('/:memberID', function(req, res) {
       'UPDATE Members SET ? WHERE MemberID = ?',
       [values, req.params.memberID]
     );
-  }).then(function(result) {
+  }).then(result => {
     let message = {
       memberID: req.params.memberID,
       affectedRows: result.affectedRows,
       entryChanged: Boolean(result.changedRows)
     };
-    res.send(packageData(message));
-  }).catch(function(error) {
-    res.send(parseError(error));
+    return res.send(connection.packageData(message));
+  }).catch(error => {
+    return res.send(connection.parseError(error));
   });
 });
 
 // Delete the specified member from the database
 // TODO: Delete Member refernce in Promos and Member_Login tables
-router.delete('/:memberID', function(req, res) {
+router.delete('/:memberID', (req, res) => {
   connection.promiseQuery(
     'SELECT 1 FROM Members WHERE MemberID = ?',
     req.params.memberID
-  ).then(function(result) {
-    if (result.length == 0) {
+  ).then(result => {
+    if (result.length === 0) {
       let error = new Error('The MemberID '+ req.params.memberID +' could not be found.');
       error.code = 404;
       return Promise.reject(error);
@@ -183,21 +183,21 @@ router.delete('/:memberID', function(req, res) {
       'DELETE FROM Member_Event WHERE MemberID = ?',
       req.params.memberID
     );
-  }).then(function(result) {
+  }).then(result => {
     console.log(result);
     return connection.promiseQuery(
       'DELETE FROM Members WHERE MemberID = ?',
       req.params.memberID
     );
-  }).then(function(result) {
+  }).then(result => {
     console.log(result);
     let message = {
       message: 'Deletion successful',
       memberID: req.params.memberID
     };
-    res.send(packageData(message));
-  }).catch(function(error) {
-    res.send(parseError(error));
+    return res.send(connection.packageData(message));
+  }).catch(error => {
+    return res.send(connection.parseError(error));
   });
 });
 
@@ -208,7 +208,7 @@ function yearBreakdown(rawData, key) {
 	let i = 0;
 
 	for (let j = 0; i < rawData.length; j++) {
-    yearData[j] = rawData[i].YearID == j + 1 ? rawData[i++][key] : 0;
+    yearData[j] = rawData[i].YearID === j + 1 ? rawData[i++][key] : 0;
   }
 
 	return {
@@ -218,16 +218,7 @@ function yearBreakdown(rawData, key) {
 		senior: yearData[3],
 		graduate_student: yearData[4],
 		professor: yearData[5],
-		other: yearData[6],
-		company_rep: yearData[7]
+    company_rep: yearData[6],
+		other: yearData[7],
 	};
-}
-
-function packageData(data) {
-  return JSON.stringify({ status: 200, data: data });
-}
-
-function parseError(error) {
-  console.log(error);
-  return JSON.stringify({ status: error.code, message: error.message });
 }
