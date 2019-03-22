@@ -1,30 +1,24 @@
-const functions = require('firebase-functions');
-var {
-  google
-} = require('googleapis');
-let privatekey = require("./privatekey.json");
-let jwtClient = new google.auth.JWT(
-  privatekey.client_email,
-  null,
-  privatekey.private_key,
-  ['https://www.googleapis.com/auth/spreadsheets',
-    'https://www.googleapis.com/auth/drive',
-    'https://www.googleapis.com/auth/calendar'
-  ]);
-authenticate(jwtClient);
+const express = require('express')
+const app = express()
+const port = 3000
+var exports = module.exports = {};
+var {google} = require('googleapis');
+let privatekey = require("./sensitiveData/privatekey.json");
+let driveInfo = require("./sensitiveData/driveInfo.json");
 
-// // Create and Deploy Your First Cloud Functions
-// // https://firebase.google.com/docs/functions/write-firebase-functions
-//
-// exports.helloWorld = functions.https.onRequest((request, response) => {
-//  response.send("Hello from Firebase!");
-// });
+//getSignIn();
 
-//email should be identifier.
-exports.pullMemberData = functions.https.onCall((data, context) => {
-    authenticate(client);
-});
+function getSignIn() {
+  let jwtClient = new google.auth.JWT(
+    privatekey.client_email,
+    null,
+    privatekey.private_key,
+    ['https://www.googleapis.com/auth/spreadsheets',
+      'https://www.googleapis.com/auth/drive',
+      'https://www.googleapis.com/auth/calendar'
+    ]);
 
+<<<<<<< HEAD:firebase/functions/index.js
 //List of needed Functions for stats
 // 1) Pull members/event details from spreadsheets
 // 2) Calculate number of active members
@@ -34,12 +28,15 @@ exports.pullMemberData = functions.https.onCall((data, context) => {
 
 function authenticate(client) {
   jwtClient.authorize((err, tokens) => {
+=======
+  jwtClient.authorize(function(err, tokens) {
+>>>>>>> 3218b722a254115800c3d86925eb706047890a3d:getSheets.js
     if (err) {
       console.log(err);
       return;
     } else {
       console.log("Successfully connected to sheets");
-      var parentID = "1lCoITNE0eyrRNxKtVhpHe7bq-P0FUp0e";
+      var parentID = driveInfo.folderID;
       loadFiles(jwtClient, parentID);
     }
   });
@@ -47,7 +44,6 @@ function authenticate(client) {
 
 function getSheetData(auth,sheetID){
 const sheets = google.sheets({version: 'v4', auth});
-//var spreadsheetId = "1sSDRdukNm1UskZ9ivkuJ2hvsX-HhHLEfxO8rszuoqz8";
 var request = {
         valueRenderOption: 'FORMATTED_VALUE',
         spreadsheetId:sheetID,
@@ -86,3 +82,4 @@ function loadFiles(auth,parent) {
     }
   });
 }
+module.exports.getSheetData = function(){getSignIn()}

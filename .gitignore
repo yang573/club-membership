@@ -3,6 +3,10 @@
 node_modules/
 upload/
 
+.jshintrc
+
 cloud_sql_proxy.exe
 server/active-members-sbcs.json
 csvs/
+privatekey.json
+sensitiveData/*
