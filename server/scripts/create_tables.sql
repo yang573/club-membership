@@ -24,7 +24,8 @@ CREATE TABLE IF NOT EXISTS semester (
 INSERT INTO semester (Value)
 VALUES
 	('Spring 2018'),
-    ('Fall 2018');
+    ('Fall 2018'),
+    ('Spring 2019');
 
 CREATE TABLE IF NOT EXISTS members (
 	MemberID int PRIMARY KEY AUTO_INCREMENT,

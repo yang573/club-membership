@@ -9,8 +9,14 @@ const connection = require('./connection');
 const upload = multer({ dest: 'upload/'});
 const router = express.Router();
 
+const SQL_GET_YEAR = `SELECT IFNULL(
+  (SELECT YearID FROM academic_year WHERE Value LIKE ?),
+  (SELECT YearID FROM academic_year ORDER BY YearID DESC LIMIT 1))
+  AS YearID`;
+
 
 // Add an event spreadsheet to the database
+// TODO: Abstract everything with async/await
 // TODO: Change to csv parse into stream
 // TODO: Check for duplicate log-ins (with hashset)
 // TODO: Pass headers to insertMemberFromEvent()
@@ -52,6 +58,7 @@ router.post('/upload/csv', upload.single('file'), (req, res) => {
     return Promise.all(promiseArray);
   }).then(results => {
     // Gets the number of new and returning members.
+    //console.log(results);
     results.forEach(member => {
       membersPresent.push(member.memberID);
 
@@ -73,7 +80,7 @@ router.post('/upload/csv', upload.single('file'), (req, res) => {
     // TODO: Get name and date directly from file
     // Inserts the event into the database.
     return connection.promiseQuery(
-      'INSERT INTO events (Name, Date, SemesterID, Attendance) VALUES (?, ?, ?, ?)',
+      `INSERT INTO events (Name, Date, SemesterID, Attendance) VALUES (?, ?, ?, ?)`,
       [req.body.eventName, req.body.eventDate, result[0].SemesterID, data.length]
     );
   }).then(result => {
@@ -107,9 +114,9 @@ router.post('/upload/drive', (req, res) => {
   googleAuth().catch(error => {
     console.log(error);
     error.code = error.status;
-    return res.send(parseError(error));
+    return res.send(connection.parseError(error));
   });
-  return res.send(packageData('done'));
+  return res.send(connection.packageData('done'));
 });
 
 // Get overall event info for the most recent semester
@@ -258,73 +265,77 @@ async function googleAuth() {
   const url = `https://www.googleapis.com/dns/v1/projects/${project}`;
   const res = await client.request({ url });
   console.log(res.data);
+  return res.data;
 }
 
 // TODO: Parse member data based on headers
-async function insertMemberFromEvent(member) {
-  let memberID = -1;
-  let sqlString;
-  let values;
-  let emailRegex = /([A-Z0-9_.+-]+@[A-Z0-9-]+\.[A-Z0-9-]+\.[A-Z0-9-.]+)/i;
-  console.log(member);
-
-  if (emailRegex.test(member[4])) {
-    sqlString = 'SELECT MemberID FROM members WHERE Email = ?';
-    values = [member[4]];
-  } else {
-    sqlString = 'SELECT MemberID FROM members WHERE FirstName = ? AND LastName = ?';
-    values = [member[1], member[2]];
-  }
-
-  connection.promiseQuery(sqlString, values).then(result => {
-    let promiseArray = [
-      connection.promiseQuery('SELECT * FROM academic_year WHERE Value LIKE ?', member[3]),
-      (result.length !== 0) ? Promise.resolve(result[0].MemberID) : Promise.resolve(null)
-    ];
-    return Promise.all(promiseArray);
-  }).then(results => {
-    console.log(results);
+function insertMemberFromEvent(member) {
+  return new Promise((resolve, reject) => {
+    let memberID = -1;
     let sqlString;
-    let memberData;
-    let newsletter = /no/i.test(member[5]) ? false : true;
+    let values;
+    let emailRegex = /([A-Z0-9_.+-]+@[A-Z0-9-]+\.[A-Z0-9-.]+)/i;
+    //console.log(member);
+    member[4] = member[4].toLowerCase();
 
-    if (results[1]) {
-      memberID = results[1];
-      sqlString = 'UPDATE members SET ? WHERE MemberID = ?';
-      memberData = [
-        {
-          YearID: results[0][0].MemberID,
-          Newsletter: newsletter
-        },
-        memberID
-      ];
+    if (emailRegex.test(member[4])) {
+      sqlString = `SELECT MemberID FROM members WHERE Email = ?`;
+      values = [member[4]];
     } else {
-      sqlString = `INSERT INTO members (FirstName, LastName, YearID, Email, Newsletter)
-                        VALUES (?, ?, ?, ?, ?)`;
-      memberData = [
-        member[1], member[2],
-        results[0][0].YearID, member[4].trim(), newsletter
-      ];
+      sqlString = `SELECT MemberID FROM members WHERE FirstName = ? AND LastName = ?`;
+      values = [member[1], member[2]];
     }
 
-    return connection.promiseQuery(sqlString, memberData);
-  }).then(result => {
-    console.log(result);
-    let isReturning = true;
-    if (memberID === -1) {
-      memberID = result.insertId;
-      isReturning = false;
-    }
+    connection.promiseQuery(sqlString, values).then(result => {
+      if (result.length !== 0)
+        memberID = result[0].MemberID;
 
-    let message = {
-      memberID: memberID,
-      returning: isReturning,
-      affectedRows: result.affectedRows,
-      entryChanged: Boolean(result.changedRows)
-    };
-    return Promise.resolve(message);
-  }).catch(error => {
-    return Promise.reject(error);
+      return connection.promiseQuery(SQL_GET_YEAR, member[3]);
+    }).then(results => {
+      //console.log('found year');
+      //console.log(results);
+      let sqlString;
+      let memberData;
+      let newsletter = /no/i.test(member[5]) ? false : true;
+
+      if (memberID !== -1) {
+        sqlString = 'UPDATE members SET ? WHERE MemberID = ?';
+        memberData = [
+          {
+            YearID: results[0].YearID,
+            Newsletter: newsletter
+          },
+          memberID
+        ];
+      } else {
+        sqlString = `INSERT INTO members (FirstName, LastName, YearID, Email, Newsletter)
+                          VALUES (?, ?, ?, ?, ?)`;
+        memberData = [
+          member[1], member[2],
+          results[0].YearID, member[4].trim(), newsletter
+        ];
+      }
+
+      return connection.promiseQuery(sqlString, memberData);
+    }).then(result => {
+      //console.log('insert or update completed');
+      //console.log(result);
+      let isReturning = true;
+      if (memberID === -1) {
+        memberID = result.insertId;
+        isReturning = false;
+      }
+
+      let message = {
+        memberID: memberID,
+        returning: isReturning,
+        affectedRows: result.affectedRows,
+        entryChanged: Boolean(result.changedRows)
+      };
+      return resolve(message);
+    }).catch(error => {
+      return reject(error);
+    });
   });
 }
 

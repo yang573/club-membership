@@ -4,17 +4,23 @@ const connection = require('./connection');
 
 // Insert a new member
 router.post('/', (req, res) => {
+  console.log('req.body');
+  console.log(req.body);
+  console.log('end');
   connection.promiseQuery(
-    'SELECT 1 FROM Members WHERE Email = ?',
+    `SELECT 1 FROM members WHERE Email = ?`,
     req.body.email
   ).then(result => {
+    console.log(result);
+    console.log('length');
+    console.log(result.length);
     if (result.length !== 0) {
       let error = new Error('A member already exists with the email '+ req.body.email);
       error.code = 404;
       return Promise.reject(error);
     }
 
-    let sqlString = `INSERT INTO Members (FirstName, LastName, YearID, Email, Newsletter)
+    let sqlString = `INSERT INTO members (FirstName, LastName, YearID, Email, Newsletter)
                       VALUES (?, ?, ?, ?, ?)`;
     let memberData = [
       req.body.firstName, req.body.lastName,
@@ -23,14 +29,15 @@ router.post('/', (req, res) => {
 
     return connection.promiseQuery(sqlString, memberData);
   }).then(result => {
+    console.log(result);
     let insertData = {
-      memberID: result.insertID,
-      url: `/member/${result.insertID}`
+      memberID: result.insertId,
+      url: `/member/${result.insertId}`
     };
 
-    return res.send(packageData(insertData));
+    return res.send(connection.packageData(insertData));
   }).catch(error => {
-    res.send(parseError(error));
+    res.send(connection.parseError(error));
   });
 });
 
@@ -39,11 +46,11 @@ router.post('/', (req, res) => {
 router.get('/', (req, res) => {
   let memberData;
   let promiseArray = [
-    connection.promiseQuery('SELECT COUNT(*) AS count FROM Members'),
+    connection.promiseQuery('SELECT COUNT(*) AS count FROM members'),
     connection.promiseQuery(`SELECT ROUND(AVG(Semester_Attendance), 2) AS semester_average,
       ROUND(AVG(Total_Attendance), 2) AS total_average
-      FROM Membership`),
-    connection.promiseQuery('SELECT Active, COUNT(*) AS count FROM Membership GROUP BY Active'),
+      FROM membership`),
+    connection.promiseQuery('SELECT Active, COUNT(*) AS count FROM membership GROUP BY Active'),
   ];
 
   Promise.all(promiseArray).then(results => {
@@ -59,13 +66,13 @@ router.get('/', (req, res) => {
     };
 
     promiseArray = [
-      connection.promiseQuery('SELECT YearID, COUNT(*) AS count FROM Members GROUP BY YearID'),
+      connection.promiseQuery('SELECT YearID, COUNT(*) AS count FROM members GROUP BY YearID'),
       connection.promiseQuery(`SELECT YearID,
         ROUND(AVG(Semester_Attendance), 2) AS semester_average,
         ROUND(AVG(Total_Attendance), 2) AS total_average
-        FROM Membership GROUP BY YearID`),
+        FROM membership GROUP BY YearID`),
       connection.promiseQuery(`SELECT YearID, Active, COUNT(*) AS count
-        FROM Membership GROUP BY YearID, Active`),
+        FROM membership GROUP BY YearID, Active`),
     ];
     return Promise.all(promiseArray);
   }).then(results => {
@@ -78,7 +85,7 @@ router.get('/', (req, res) => {
       active_members: yearBreakdown(results[2], 'count')
     };
 
-    return connection.promiseQuery('SELECT MemberID, FirstName, LastName FROM Members');
+    return connection.promiseQuery('SELECT MemberID, FirstName, LastName FROM members');
   }).then(results => {
     console.log(results);
 
@@ -100,8 +107,8 @@ router.get('/', (req, res) => {
 router.get('/:memberID', (req, res) => {
   let memberData;
   let promiseArray = [
-    connection.promiseQuery('SELECT * FROM Members WHERE MemberID = ? LIMIT 1', req.params.memberID),
-    connection.promiseQuery('SELECT * FROM Membership WHERE MemberID = ? LIMIT 1', req.params.memberID)
+    connection.promiseQuery('SELECT * FROM members WHERE MemberID = ? LIMIT 1', req.params.memberID),
+    connection.promiseQuery('SELECT * FROM membership WHERE MemberID = ? LIMIT 1', req.params.memberID)
   ];
 
   Promise.all(promiseArray).then(results => {
@@ -140,7 +147,7 @@ router.get('/:memberID', (req, res) => {
 router.patch('/:memberID', (req, res) => {
   let values = req.body.values; // JSON
   connection.promiseQuery(
-    'SELECT 1 FROM Members WHERE MemberID = ?',
+    'SELECT 1 FROM members WHERE MemberID = ?',
     req.params.memberID
   ).then(result => {
     if (result.length === 0) {
@@ -151,7 +158,7 @@ router.patch('/:memberID', (req, res) => {
 
     // TODO: Check if toSqlString() is needed for the bottom to work
     return connection.promiseQuery(
-      'UPDATE Members SET ? WHERE MemberID = ?',
+      'UPDATE members SET ? WHERE MemberID = ?',
       [values, req.params.memberID]
     );
   }).then(result => {
@@ -170,7 +177,7 @@ router.patch('/:memberID', (req, res) => {
 // TODO: Delete Member refernce in Promos and Member_Login tables
 router.delete('/:memberID', (req, res) => {
   connection.promiseQuery(
-    'SELECT 1 FROM Members WHERE MemberID = ?',
+    'SELECT 1 FROM members WHERE MemberID = ?',
     req.params.memberID
   ).then(result => {
     if (result.length === 0) {
@@ -180,13 +187,13 @@ router.delete('/:memberID', (req, res) => {
     }
 
     return connection.promiseQuery(
-      'DELETE FROM Member_Event WHERE MemberID = ?',
+      'DELETE FROM member_event WHERE MemberID = ?',
       req.params.memberID
     );
   }).then(result => {
     console.log(result);
     return connection.promiseQuery(
-      'DELETE FROM Members WHERE MemberID = ?',
+      'DELETE FROM members WHERE MemberID = ?',
       req.params.memberID
     );
   }).then(result => {

@@ -21,7 +21,7 @@ app.use('/facebook', facebook);
 app.use('/linkedin', linkedin);
 
 app.get('/', (req,res) => {
-  res.send('Hello World!!!');
+  res.send('No endpoint specified');
 });
 
 // Catch-all for returning help info

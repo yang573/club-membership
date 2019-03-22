@@ -8,7 +8,7 @@ router.post('/alumni', function(req, res) {
   promiseQuery('SELECT * FROM Members WHERE YearID > 4').then(function(results) {
     //TODO
   }).catch(function(error) {
-    res.send(parseError(error));
+    res.send(connection.parseError(error));
   });
 });
 

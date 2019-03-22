@@ -33,7 +33,7 @@ exports.pullMemberData = functions.https.onCall((data, context) => {
 //drive api stuff
 
 function authenticate(client) {
-  jwtClient.authorize(function(err, tokens) {
+  jwtClient.authorize((err, tokens) => {
     if (err) {
       console.log(err);
       return;
@@ -53,7 +53,7 @@ var request = {
         spreadsheetId:sheetID,
         range:"A:E"
 }
-sheets.spreadsheets.values.get(request, function(err,response){
+sheets.spreadsheets.values.get(request, (err,response) => {
   if (err) {
       console.error(err);
       return;
@@ -80,7 +80,7 @@ function loadFiles(auth,parent) {
                 }
     const files = res.data.files;
     if (files.length) {
-        files.forEach(function(file){
+        files.forEach((file) => {
           getSheetData(auth,file.id);
         });
     }
